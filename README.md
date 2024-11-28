@@ -4,76 +4,91 @@
 ## 1. Kubernetes vs Docker
 
 ### Docker:
-- A platform for developing, shipping, and running applications inside containers.
-- Containers are lightweight, portable, and provide consistency across development, testing, and production environments.
+- **Purpose**: Docker is a platform for developing, shipping, and running applications inside containers.
+- **Key Features**:
+  - **Containerization**: Creates isolated environments for applications.
+  - **Portability**: Containers can run on any system—developer machines, testing environments, or production servers.
+  - **Images**: Containers are created from read-only templates called Docker images, built from a Dockerfile.
 
 ### Kubernetes:
-- A container orchestration platform that automates the deployment, scaling, and operation of containerized applications.
-- While Docker manages individual containers, Kubernetes manages clusters of containers, providing features like high availability, scaling, and resource management.
+- **Purpose**: Kubernetes is a container orchestration platform that automates the deployment, scaling, and management of containerized applications.
+- **Key Features**:
+  - **Cluster Management**: Manages clusters of Docker containers.
+  - **Automatic Scaling**: Automatically adjusts the number of running containers based on workload demands.
+  - **Self-healing**: Restarts containers that fail or become unresponsive.
+  - **Load Balancing**: Distributes traffic to containers across multiple instances for high availability and fault tolerance.
 
 ### Key Difference:
-- Docker is used for containerizing applications, while Kubernetes manages and orchestrates containers at scale.
+- Docker focuses on container creation and management, while Kubernetes manages and orchestrates containers across a cluster, handling tasks like scaling, deployment, and monitoring.
 
 ---
 
 ## 2. Kubernetes Architecture
 
-Kubernetes is made up of several key components that work together to maintain the cluster.
+Kubernetes follows a **client-server** architecture with several components that ensure the desired state of the cluster is maintained.
 
-### Master Node: The control plane responsible for managing the cluster.
-- **API Server**: The entry point for all REST commands used to control the cluster.
-- **Controller Manager**: Responsible for maintaining the desired state of the cluster, such as replication and scaling.
-- **Scheduler**: Decides which node will run a pod based on resource availability.
-- **etcd**: A distributed key-value store for storing all cluster data, such as configurations and state.
+### Master Node (Control Plane):
+- **API Server**: The entry point for all REST commands used to control the cluster. It exposes the Kubernetes API and handles communication with the cluster.
+- **Scheduler**: Decides which node should run the pod based on available resources and constraints.
+- **Controller Manager**: Manages the lifecycle of resources in the cluster (e.g., scaling, replication).
+  - **Replication Controller**: Ensures a specified number of pod replicas are running.
+  - **Deployment Controller**: Manages updates and rollouts of deployments.
+- **etcd**: A distributed key-value store that holds all configuration and state data of the cluster.
 
-### Worker Nodes: Nodes that run the containerized applications.
-- **Kubelet**: An agent that ensures containers are running on the node as expected.
-- **Kube Proxy**: Maintains network rules for pod communication and load balancing.
-- **Container Runtime**: Software (like Docker, containerd, etc.) used to run containers.
+### Worker Node:
+- **Kubelet**: Ensures that containers in the pods are running and healthy.
+- **Kube Proxy**: Handles network traffic routing, ensuring that requests are sent to the appropriate pod.
+- **Container Runtime**: The software responsible for running containers (e.g., Docker, containerd).
 
 ---
 
 ## 3. Pods
 
-- A **Pod** is the smallest deployable unit in Kubernetes, and it contains one or more containers (typically one).
-- Pods share the same network, storage, and lifecycle.
-- **Use Case**: A pod can be used to group containers that need to share resources, like a front-end and a back-end service in a single container group.
+A **Pod** is the smallest and simplest Kubernetes object. A pod can host one or more containers that share the same network, storage, and other resources.
+
+### Key Features:
+- **Single-container Pods**: A pod with only one container.
+- **Multi-container Pods**: Containers in a pod can communicate over localhost and share storage volumes, which makes them ideal for co-located applications (e.g., a web server and a log shipper).
+  
+### Pod Lifecycle:
+- **Pending**: The pod is being scheduled to a node.
+- **Running**: The pod is running its containers.
+- **Succeeded**: The containers in the pod have finished successfully.
+- **Failed**: One or more containers have terminated with an error.
+- **Unknown**: The pod's state cannot be determined.
 
 ---
 
 ## 4. Development with Kubernetes
 
-- **kubectl**: The command-line interface to interact with Kubernetes clusters.
-  - Common commands:
-    - `kubectl get pods`: List pods.
-    - `kubectl create -f <file>.yaml`: Create resources from a YAML file.
-    - `kubectl apply -f <file>.yaml`: Update resources.
+### kubectl Commands:
+- **`kubectl get pods`**: List all pods in the current namespace.
+- **`kubectl describe pod <pod_name>`**: Show detailed information about a pod.
+- **`kubectl apply -f <file>.yaml`**: Apply a configuration from a YAML file to create or update resources.
+- **`kubectl delete -f <file>.yaml`**: Delete resources defined in a YAML file.
 
-- **Kubernetes Manifests**: Describes the desired state of the system, including deployments, services, pods, and more, typically defined in YAML files.
-  - Example:
-    ```yaml
-    apiVersion: apps/v1
-    kind: Deployment
+### Example Deployment Manifest:
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-app
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: my-app
+  template:
     metadata:
-      name: my-app
+      labels:
+        app: my-app
     spec:
-      replicas: 3
-      selector:
-        matchLabels:
-          app: my-app
-      template:
-        metadata:
-          labels:
-            app: my-app
-        spec:
-          containers:
-          - name: my-app
-            image: my-app:1.0
-            ports:
-            - containerPort: 8080
-    ```
+      containers:
+      - name: my-app-container
+        image: my-app:v1
+        ports:
+        - containerPort: 8080
 
----
 
 ## 5. Services
 
