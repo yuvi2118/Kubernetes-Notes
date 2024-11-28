@@ -1,1 +1,1 @@
-# This is a Ultimate Notes Github for Kubernetes 😀
+# Kubernetes Notes Guide For Starters 😀
