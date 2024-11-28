@@ -174,25 +174,249 @@ graph TD
 - Implements service load balancing
 - Manages network routing
 
-## Continued Chapters...
+## 3. Networking in Kubernetes
 
-[The artifact continues with in-depth explanations of networking, state management, security, scaling, monitoring, advanced patterns, and production readiness, each chapter combining theoretical explanations with practical YAML examples and architectural diagrams.]
+### 3.1 Service Types
 
-### Learning Approach
+#### ClusterIP
+- Default service type
+- Internal cluster communication
+- No external access
 
-This guide is structured to provide:
-- Comprehensive theoretical foundations
-- Practical, real-world examples
-- Best practices and architectural insights
-- Progressive complexity
+**Example ClusterIP Service:**
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: internal-service
+spec:
+  selector:
+    app: myapp
+  type: ClusterIP
+  ports:
+  - port: 80
+    targetPort: 8080
+```
 
-**Remember**: Kubernetes is a journey of continuous learning and adaptation.
+#### NodePort
+- Exposes service on static port
+- Accessible externally
 
-## Recommended Learning Path
-1. Understand core concepts
-2. Practice with minikube
-3. Build sample applications
-4. Explore advanced configurations
-5. Pursue certification (CKA/CKAD)
+**Example NodePort Service:**
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: external-service
+spec:
+  selector:
+    app: myapp
+  type: NodePort
+  ports:
+  - port: 80
+    targetPort: 8080
+    nodePort: 30001
+```
 
-**Pro Tip**: Hands-on experience trumps theoretical knowledge. Build, break, and rebuild!
+#### LoadBalancer
+- External load balancing
+- Cloud provider integration
+
+**Example LoadBalancer Service:**
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: load-balanced-service
+spec:
+  selector:
+    app: myapp
+  type: LoadBalancer
+  ports:
+  - port: 80
+    targetPort: 8080
+```
+
+### 3.2 Ingress
+- HTTP/HTTPS routing
+- SSL termination
+- Path-based routing
+
+**Example Ingress:**
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: example-ingress
+spec:
+  rules:
+  - http:
+      paths:
+      - path: /app
+        pathType: Prefix
+        backend:
+          service:
+            name: app-service
+            port:
+              number: 80
+```
+
+## 4. State Management
+
+### 4.1 Persistent Volumes
+
+**Persistent Volume Claim:**
+```yaml
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: database-storage
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+```
+
+### 4.2 StatefulSets
+- Stable, unique network identifiers
+- Stable, persistent storage
+- Ordered deployment
+
+**Example StatefulSet:**
+```yaml
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres-statefulset
+spec:
+  serviceName: "postgres"
+  replicas: 3
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    spec:
+      containers:
+      - name: postgres
+        image: postgres:13
+        ports:
+        - containerPort: 5432
+```
+
+## 5. Security and Access Control
+
+### 5.1 RBAC (Role-Based Access Control)
+
+**Role Example:**
+```yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  namespace: default
+  name: pod-reader
+rules:
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["get", "watch", "list"]
+```
+
+**RoleBinding Example:**
+```yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: read-pods
+subjects:
+- kind: User
+  name: jane
+roleRef:
+  kind: Role
+  name: pod-reader
+```
+
+### 5.2 Secrets Management
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: app-secrets
+type: Opaque
+stringData:
+  DB_PASSWORD: your-secure-password
+```
+
+## 6. Scaling and Performance
+
+### 6.1 Horizontal Pod Autoscaler
+```yaml
+apiVersion: autoscaling/v2beta1
+kind: HorizontalPodAutoscaler
+metadata:
+  name: nginx-autoscaler
+spec:
+  scaleTargetRef:
+    kind: Deployment
+    name: nginx-deployment
+  minReplicas: 1
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      targetAverageUtilization: 70
+```
+
+## 7. Advanced Topics
+
+### 7.1 Network Policies
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-nginx
+spec:
+  podSelector:
+    matchLabels:
+      app: nginx
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          allow-nginx-access: "true"
+```
+
+## 8. Production Readiness Checklist
+
+### Cluster Configuration
+- Multi-master setup
+- High availability
+- Resource allocation
+- Network policies
+- Cluster autoscaling
+
+### Application Design
+- Stateless architecture
+- Health checks
+- Resource limits
+- Horizontal scaling
+- Circuit breakers
+
+## 9. Recommended Tools
+- kubectl
+- minikube
+- helm
+- k3s
+- Prometheus
+- Grafana
+
+## 10. Best Practices
+1. Use declarative configurations
+2. Implement proper logging
+3. Use namespaces
+4. Regular updates and patches
+5. Robust monitoring
+6. Follow security best practices
+
+**Final Recommendation**: Continuous learning and hands-on practice are key to mastering Kubernetes.
